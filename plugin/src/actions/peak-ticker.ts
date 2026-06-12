@@ -1,7 +1,7 @@
 import { action, SingletonAction, type WillAppearEvent, type WillDisappearEvent } from "@elgato/streamdeck";
 
 import { derivePeakState } from "../lib/peak";
-import { renderBadgeSvg, formatCountdown } from "../lib/render";
+import { renderBadge, formatCountdown } from "../lib/render";
 
 const POLL_MS = 15000;
 
@@ -25,6 +25,6 @@ export class PeakTicker extends SingletonAction {
 	#draw(target: { setImage(image: string): Promise<void> }): void {
 		const nowS = Math.floor(Date.now() / 1000);
 		const state = derivePeakState(nowS);
-		void target.setImage(renderBadgeSvg(state.isPeak, formatCountdown(state.secondsToSwitch)));
+		void target.setImage(renderBadge({ isPeak: state.isPeak, countdown: formatCountdown(state.secondsToSwitch), showCountdown: true, background: "dark" }));
 	}
 }
