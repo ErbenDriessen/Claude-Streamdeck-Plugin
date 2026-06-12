@@ -6,7 +6,11 @@ import { withPeakDefaults, type PeakSettings } from "../lib/settings";
 
 const POLL_MS = 15000;
 
-type DrawEvent = { action: { setImage(image: string): Promise<void> }; payload: { settings: Partial<PeakSettings> } };
+interface ActionRef {
+	id: string;
+	getSettings(): Promise<Partial<PeakSettings>>;
+	setImage(image: string): Promise<void>;
+}
 
 /** Draws PEAK / OFF-PEAK and a countdown to the next switch, fully client-side. */
 @action({ UUID: "com.erbendriessen.claude.peak" })
@@ -14,9 +18,10 @@ export class PeakTicker extends SingletonAction {
 	#timers = new Map<string, ReturnType<typeof setInterval>>();
 
 	override onWillAppear(ev: WillAppearEvent): void {
-		this.#draw(ev as unknown as DrawEvent);
-		const timer = setInterval(() => this.#draw(ev as unknown as DrawEvent), POLL_MS);
-		this.#timers.set(ev.action.id, timer);
+		const ref = ev.action as unknown as ActionRef;
+		void this.#draw(ref);
+		const timer = setInterval(() => void this.#draw(ref), POLL_MS);
+		this.#timers.set(ref.id, timer);
 	}
 
 	override onWillDisappear(ev: WillDisappearEvent): void {
@@ -26,14 +31,14 @@ export class PeakTicker extends SingletonAction {
 	}
 
 	override onDidReceiveSettings(ev: DidReceiveSettingsEvent): void {
-		this.#draw(ev as unknown as DrawEvent);
+		void this.#draw(ev.action as unknown as ActionRef);
 	}
 
-	#draw(ev: DrawEvent): void {
-		const s = withPeakDefaults(ev.payload.settings ?? {});
+	async #draw(action: ActionRef): Promise<void> {
+		const s = withPeakDefaults(await action.getSettings());
 		const nowS = Math.floor(Date.now() / 1000);
 		const schedule = { startHourUTC: s.peakStartUTC, endHourUTC: s.peakEndUTC, weekdays: [1, 2, 3, 4, 5] };
 		const state = derivePeakState(nowS, schedule);
-		void ev.action.setImage(renderBadge({ isPeak: state.isPeak, countdown: formatCountdown(state.secondsToSwitch), showCountdown: s.showCountdown, background: s.background }));
+		void action.setImage(renderBadge({ isPeak: state.isPeak, countdown: formatCountdown(state.secondsToSwitch), showCountdown: s.showCountdown, background: s.background, bgColor: s.bgColor }));
 	}
 }
