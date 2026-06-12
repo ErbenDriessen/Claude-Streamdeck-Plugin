@@ -2,6 +2,9 @@
 
 > **Unofficial** — not affiliated with Anthropic.
 
+> 🛒 **Elgato Marketplace:** submitted and pending review — the one-click install
+> link will appear here once it's published.
+
 An Elgato Stream Deck plugin that shows your **Claude Code usage limits** at a
 glance, with two same-styled actions:
 
