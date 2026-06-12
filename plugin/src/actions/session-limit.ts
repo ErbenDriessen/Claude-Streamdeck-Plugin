@@ -1,18 +1,21 @@
-import { action, SingletonAction, type WillAppearEvent, type WillDisappearEvent } from "@elgato/streamdeck";
+import { action, SingletonAction, type WillAppearEvent, type WillDisappearEvent, type DidReceiveSettingsEvent } from "@elgato/streamdeck";
 
 import { readUsageFile, deriveSessionState } from "../lib/usage";
 import { renderGauge, formatCountdown } from "../lib/render";
+import { withSessionDefaults, type SessionSettings } from "../lib/settings";
 
 const POLL_MS = 5000;
 
-/** Polls ~/.claude/usage.json and draws a horseshoe gauge of the 5h session-limit %. */
+type DrawEvent = { action: { setImage(image: string): Promise<void> }; payload: { settings: Partial<SessionSettings> } };
+
+/** Draws a configurable gauge of the chosen rate-limit window. */
 @action({ UUID: "com.erbendriessen.claude.session" })
 export class SessionLimit extends SingletonAction {
 	#timers = new Map<string, ReturnType<typeof setInterval>>();
 
 	override onWillAppear(ev: WillAppearEvent): void {
-		this.#draw(ev.action);
-		const timer = setInterval(() => this.#draw(ev.action), POLL_MS);
+		this.#draw(ev as unknown as DrawEvent);
+		const timer = setInterval(() => this.#draw(ev as unknown as DrawEvent), POLL_MS);
 		this.#timers.set(ev.action.id, timer);
 	}
 
@@ -22,24 +25,25 @@ export class SessionLimit extends SingletonAction {
 		this.#timers.delete(ev.action.id);
 	}
 
-	#draw(target: { setImage(image: string): Promise<void> }): void {
+	override onDidReceiveSettings(ev: DidReceiveSettingsEvent): void {
+		this.#draw(ev as unknown as DrawEvent);
+	}
+
+	#draw(ev: DrawEvent): void {
+		const s = withSessionDefaults(ev.payload.settings ?? {});
 		const nowS = Math.floor(Date.now() / 1000);
-		const state = deriveSessionState(readUsageFile(), nowS);
-		const colours = { colourMode: "heat" as const, accent: "#3fb950", warnAt: 70, dangerAt: 90 };
-		const common = { showCountdown: true, background: "dark" as const, colours, style: "horseshoe" as const };
-		switch (state.kind) {
-			case "setup":
-				void target.setImage(renderGauge({ ...common, pct: 0, countdown: "—" }));
-				break;
-			case "reset":
-				void target.setImage(renderGauge({ ...common, pct: 0, countdown: "reset" }));
-				break;
-			case "stale":
-				void target.setImage(renderGauge({ ...common, pct: 0, countdown: "idle" }));
-				break;
-			case "ok":
-				void target.setImage(renderGauge({ ...common, pct: state.percentage, countdown: formatCountdown(state.secondsToReset) }));
-				break;
+		const file = readUsageFile();
+		const state = deriveSessionState(file, nowS);
+		const colours = { colourMode: s.colourMode, accent: s.accent, warnAt: s.warnAt, dangerAt: s.dangerAt };
+		const common = { showCountdown: s.showCountdown, background: s.background, colours, style: s.gaugeStyle };
+
+		if (state.kind === "ok" && file) {
+			const win = s.window === "sevenDay" && file.sevenDay ? file.sevenDay : file.fiveHour;
+			const secs = Math.max(0, win.resetsAt - nowS);
+			void ev.action.setImage(renderGauge({ ...common, pct: win.usedPercentage, countdown: formatCountdown(secs) }));
+			return;
 		}
+		const label = state.kind === "reset" ? "reset" : state.kind === "stale" ? "idle" : "—";
+		void ev.action.setImage(renderGauge({ ...common, pct: 0, countdown: label }));
 	}
 }

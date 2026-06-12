@@ -1,9 +1,12 @@
-import { action, SingletonAction, type WillAppearEvent, type WillDisappearEvent } from "@elgato/streamdeck";
+import { action, SingletonAction, type WillAppearEvent, type WillDisappearEvent, type DidReceiveSettingsEvent } from "@elgato/streamdeck";
 
 import { derivePeakState } from "../lib/peak";
 import { renderBadge, formatCountdown } from "../lib/render";
+import { withPeakDefaults, type PeakSettings } from "../lib/settings";
 
 const POLL_MS = 15000;
+
+type DrawEvent = { action: { setImage(image: string): Promise<void> }; payload: { settings: Partial<PeakSettings> } };
 
 /** Draws PEAK / OFF-PEAK and a countdown to the next switch, fully client-side. */
 @action({ UUID: "com.erbendriessen.claude.peak" })
@@ -11,8 +14,8 @@ export class PeakTicker extends SingletonAction {
 	#timers = new Map<string, ReturnType<typeof setInterval>>();
 
 	override onWillAppear(ev: WillAppearEvent): void {
-		this.#draw(ev.action);
-		const timer = setInterval(() => this.#draw(ev.action), POLL_MS);
+		this.#draw(ev as unknown as DrawEvent);
+		const timer = setInterval(() => this.#draw(ev as unknown as DrawEvent), POLL_MS);
 		this.#timers.set(ev.action.id, timer);
 	}
 
@@ -22,9 +25,15 @@ export class PeakTicker extends SingletonAction {
 		this.#timers.delete(ev.action.id);
 	}
 
-	#draw(target: { setImage(image: string): Promise<void> }): void {
+	override onDidReceiveSettings(ev: DidReceiveSettingsEvent): void {
+		this.#draw(ev as unknown as DrawEvent);
+	}
+
+	#draw(ev: DrawEvent): void {
+		const s = withPeakDefaults(ev.payload.settings ?? {});
 		const nowS = Math.floor(Date.now() / 1000);
-		const state = derivePeakState(nowS);
-		void target.setImage(renderBadge({ isPeak: state.isPeak, countdown: formatCountdown(state.secondsToSwitch), showCountdown: true, background: "dark" }));
+		const schedule = { startHourUTC: s.peakStartUTC, endHourUTC: s.peakEndUTC, weekdays: [1, 2, 3, 4, 5] };
+		const state = derivePeakState(nowS, schedule);
+		void ev.action.setImage(renderBadge({ isPeak: state.isPeak, countdown: formatCountdown(state.secondsToSwitch), showCountdown: s.showCountdown, background: s.background }));
 	}
 }
