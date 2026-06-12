@@ -6,7 +6,11 @@ export const PEAK_SCHEDULE = {
   weekdays: [1, 2, 3, 4, 5], // 0=Sun .. 6=Sat
 } as const;
 
-export type PeakSchedule = typeof PEAK_SCHEDULE;
+export interface PeakSchedule {
+  startHourUTC: number;
+  endHourUTC: number;
+  weekdays: readonly number[];
+}
 
 export interface PeakState {
   isPeak: boolean;
@@ -21,7 +25,7 @@ function peakAt(nowS: number, s: PeakSchedule): boolean {
   const d = new Date(nowS * 1000);
   const secOfDay = d.getUTCHours() * HOUR + d.getUTCMinutes() * 60 + d.getUTCSeconds();
   return (
-    s.weekdays.includes(d.getUTCDay() as 1 | 2 | 3 | 4 | 5) &&
+    s.weekdays.includes(d.getUTCDay()) &&
     secOfDay >= s.startHourUTC * HOUR &&
     secOfDay < s.endHourUTC * HOUR
   );
