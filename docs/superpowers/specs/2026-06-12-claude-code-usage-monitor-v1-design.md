@@ -94,37 +94,58 @@ The PI is the make-or-break for "clean, not overwhelming." Rules:
 
 ## Data source (Session Limit)
 
-A Stream Deck plugin cannot read Claude Code's rate-limit numbers directly — they
-are only delivered to the Claude Code status line. The official % is our key
-differentiator, so the plugin both **uses** and can **set up** that path.
+**Primary: Anthropic's official OAuth usage endpoint** — the plugin reads the
+local Claude Code credentials and queries Anthropic directly, so it is **live and
+independent of whether a Claude Code terminal is running**. This is the same call
+Claude Code itself makes; the token never leaves the machine except to Anthropic.
 
-### Resolution priority (`lib/source.ts`, pure where possible)
+Request (`lib/usageApi.ts`):
 
-1. **`~/.claude/usage.json`** — written by our status line. If present and fresh
-   (`updatedAt` within 6h), use it → the real Anthropic %. This is preferred.
-2. **`ccusage` fallback** — if the file is missing/stale, spawn
-   `npx ccusage@latest blocks --active --json` and use the active 5-hour block.
-   ccusage cannot produce the official plan %, so in fallback mode the gauge shows
-   **window progress** (block elapsed / 300 min) and the block's real reset
-   countdown, with a small "≈" marker and a tooltip explaining it is an estimate
-   until official tracking is set up.
-3. **Neither** → setup state ("—", prompts the user to press Set up).
+```
+GET https://api.anthropic.com/api/oauth/usage
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer <claudeAiOauth.accessToken from ~/.claude/.credentials.json>
+anthropic-beta: oauth-2025-04-20
+```
 
-### "Set up official tracking" (one-time, from the PI)
+Response (relevant fields):
 
-A button in the Session Limit PI that:
+```json
+{
+  "five_hour": { "utilization": 37.0, "resets_at": "2026-06-12T19:59:59.4+00:00" },
+  "seven_day": { "utilization": 21.0, "resets_at": "2026-06-13T16:59:59.4+00:00" },
+  "seven_day_sonnet": { "utilization": 0.0, "resets_at": "..." }
+}
+```
 
-1. Writes `~/.claude/statusline.js` (our producer; bundled with the plugin under
-   `assets/statusline.js`).
-2. Reads `~/.claude/settings.json`, backs it up to `settings.json.bak`, merges in
-   a `statusLine` entry (`{ type: "command", command: "node <abs path>",
-   refreshInterval: 5 }`) **only if one is not already present**, and writes it
-   back. If a `statusLine` already exists, it does not overwrite it — instead it
-   reports that and shows manual instructions.
-3. Reports success/failure back to the PI.
+`utilization` is already the used %. `resets_at` is an ISO-8601 string →
+`Date.parse`. This natively provides both the 5-hour and 7-day windows.
 
-This is done by the plugin's Node backend (it has normal filesystem access), not
-the sandboxed PI. All writes are wrapped and reversible (the `.bak`).
+### Resolution priority (`lib/source.ts`)
+
+1. **OAuth usage API** — if `~/.claude/.credentials.json` has an `accessToken`
+   and the GET returns 200, use `five_hour`/`seven_day` `utilization` + `resets_at`
+   for the chosen window. Preferred (live, official).
+2. **`~/.claude/usage.json`** (status line) — fallback when the API is
+   unreachable, the token is missing, or the response is 401 (expired). Used only
+   if present and fresh (`updatedAt` within 6h).
+3. **Neither** → setup state ("—" with a hint to open Claude Code / sign in).
+
+### Token expiry
+
+The access token has `expiresAt`. It is refreshed automatically whenever Claude
+Code runs, so it normally stays valid. On a 401 or a past `expiresAt`, the plugin
+does **not** attempt its own refresh (no CLI spawning, no embedded OAuth secret);
+it falls back to `usage.json` and, if that is stale too, shows the setup hint.
+(Direct OAuth refresh is a possible v1.1 enhancement.)
+
+### No installer needed
+
+Because the API path needs no setup, the earlier "Set up official tracking"
+button and the `statusline.js` installer are **dropped**. The standalone status
+line remains a personal convenience the user may keep, and `usage.json` stays a
+zero-cost offline fallback, but the plugin no longer writes or patches anything.
 
 ## Producer (`statusline.js`)
 
@@ -151,15 +172,15 @@ Replace all Elgato placeholders with original artwork:
 ```
 plugin/src/
   lib/
-    usage.ts      # usage.json read + session state machine (existing, pure)
-    ccusage.ts    # spawn + parse ccusage active block (new)
-    source.ts     # resolution priority usage.json -> ccusage -> setup (new)
-    peak.ts       # peak schedule + next switch (existing, pure)
-    gauge.ts      # pure geometry: dash/bar math per gauge style (new)
-    render.ts     # SVG builders for horseshoe/ring/bar + badge (extended)
-    theme.ts      # colour/threshold/background resolution from settings (new)
-    settings.ts   # setting types + defaults for both actions (new)
-    installer.ts  # status-line install/patch logic (new; FS side-effects isolated)
+    usage.ts       # usage.json read + session state machine (existing, pure; now fallback)
+    credentials.ts # read ~/.claude/.credentials.json -> token (new)
+    usageApi.ts    # call + parse Anthropic oauth/usage endpoint (new)
+    source.ts      # resolution priority API -> usage.json -> setup (new)
+    peak.ts        # peak schedule + next switch (existing, pure)
+    gauge.ts       # pure geometry: dash/bar math per gauge style (new)
+    render.ts      # SVG builders for horseshoe/ring/bar + badge (extended)
+    theme.ts       # colour/threshold/background resolution from settings (new)
+    settings.ts    # setting types + defaults for both actions (new)
   actions/
     session-limit.ts  # reads settings, resolves source, renders (extended)
     peak-ticker.ts    # reads settings, renders (extended)

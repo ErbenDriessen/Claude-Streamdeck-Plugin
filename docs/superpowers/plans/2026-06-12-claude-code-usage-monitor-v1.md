@@ -805,7 +805,17 @@ git commit -m "Add Property Inspectors for session + peak"
 
 ---
 
-# Phase 3 — Data source + installer
+# Phase 3 — Data source (REVISED)
+
+> **Revision 2026-06-12:** Discovery — Anthropic exposes a live usage endpoint
+> `GET https://api.anthropic.com/api/oauth/usage` (headers: `Authorization: Bearer
+> <accessToken>`, `anthropic-beta: oauth-2025-04-20`) returning
+> `five_hour.utilization`/`resets_at` and `seven_day.*`. This is live and
+> terminal-independent, so it becomes the PRIMARY source. Tasks 9–13 below are
+> superseded by: `credentials.ts` (read token), `usageApi.ts` (call + parse),
+> `source.ts` (API → usage.json fallback → setup). The ccusage module, the
+> installer, and the "Set up official tracking" button are DROPPED. Remove the
+> setup button from `ui/session-limit.html`.
 
 ## Task 9: `lib/ccusage.ts` — parse active block (TDD)
 
