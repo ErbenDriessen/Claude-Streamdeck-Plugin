@@ -1,0 +1,57 @@
+{
+	"Name": "Claude",
+	"Version": "0.1.0.0",
+	"Author": "ErbenDriessen",
+	"Actions": [
+		{
+			"Name": "Session Limit",
+			"UUID": "com.erbendriessen.claude.session",
+			"Icon": "imgs/actions/session/icon",
+			"Tooltip": "Claude 5-hour session limit used %, with reset countdown.",
+			"Controllers": ["Keypad"],
+			"States": [
+				{
+					"Image": "imgs/actions/session/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Peak Ticker",
+			"UUID": "com.erbendriessen.claude.peak",
+			"Icon": "imgs/actions/peak/icon",
+			"Tooltip": "Anthropic peak / off-peak window, with countdown to the next switch.",
+			"Controllers": ["Keypad"],
+			"States": [
+				{
+					"Image": "imgs/actions/peak/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		}
+	],
+	"Category": "Claude",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"CodePath": "bin/plugin.js",
+	"Description": "Shows your Claude Code session limit and Anthropic peak hours.",
+	"Icon": "imgs/plugin/marketplace",
+	"SDKVersion": 3,
+	"Software": {
+		"MinimumVersion": "7.1"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "12"
+		},
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Nodejs": {
+		"Version": "24",
+		"Debug": "enabled"
+	},
+	"UUID": "com.erbendriessen.claude"
+}
