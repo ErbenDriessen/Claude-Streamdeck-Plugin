@@ -2,8 +2,9 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
+		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+		<script src="../libs/sdpi-components.js"></script>
 	</head>
 	<body>
 		<sdpi-item label="Window">
@@ -40,7 +41,13 @@
 			<sdpi-select setting="background" default="dark">
 				<option value="dark">Dark</option>
 				<option value="light">Light</option>
+				<option value="transparent">Transparent</option>
+				<option value="custom">Custom colour</option>
 			</sdpi-select>
+		</sdpi-item>
+
+		<sdpi-item label="Custom colour">
+			<sdpi-color setting="bgColor" default="#1d9e75"></sdpi-color>
 		</sdpi-item>
 
 		<details>

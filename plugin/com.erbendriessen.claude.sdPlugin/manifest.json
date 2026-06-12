@@ -9,7 +9,7 @@
 			"UUID": "com.erbendriessen.claude.session",
 			"Icon": "imgs/actions/session/icon",
 			"Tooltip": "Claude 5-hour session limit used %, with reset countdown.",
-			"PropertyInspectorPath": "ui/session-limit.html",
+			"PropertyInspectorPath": "ui/session.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -25,7 +25,7 @@
 			"UUID": "com.erbendriessen.claude.peak",
 			"Icon": "imgs/actions/peak/icon",
 			"Tooltip": "Anthropic peak / off-peak window, with countdown to the next switch.",
-			"PropertyInspectorPath": "ui/peak-ticker.html",
+			"PropertyInspectorPath": "ui/peak.html",
 			"Controllers": [
 				"Keypad"
 			],
