@@ -1,15 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { heatColor, formatCountdown, renderRingSvg, renderBadgeSvg } from "./render.js";
+import { renderGauge, renderBadge, formatCountdown } from "./render.js";
 
 const decode = (url: string) => Buffer.from(url.split(",")[1], "base64").toString("utf8");
-
-describe("heatColor", () => {
-  it("green<70, yellow 70–89, red>=90", () => {
-    expect(heatColor(10)).toBe("#3fb950");
-    expect(heatColor(75)).toBe("#d29922");
-    expect(heatColor(95)).toBe("#f85149");
-  });
-});
+const colours = { colourMode: "heat" as const, accent: "#3fb950", warnAt: 70, dangerAt: 90 };
+const opts = { pct: 42, countdown: "2u14", showCountdown: true, background: "dark" as const, colours };
 
 describe("formatCountdown", () => {
   it("formats minutes, hours+minutes, days, and zero", () => {
@@ -20,21 +14,38 @@ describe("formatCountdown", () => {
   });
 });
 
-describe("renderRingSvg", () => {
-  it("returns an svg data URL containing the percentage and countdown", () => {
-    const url = renderRingSvg(42, "2u14");
+describe("renderGauge", () => {
+  it("horseshoe: data url, shows pct, uses rotate(135) and dasharray", () => {
+    const url = renderGauge({ ...opts, style: "horseshoe" });
     expect(url.startsWith("data:image/svg+xml;base64,")).toBe(true);
     const svg = decode(url);
     expect(svg).toContain("42%");
+    expect(svg).toContain("rotate(135");
     expect(svg).toContain("2u14");
+  });
+  it("ring: rotates -90 (12 o'clock start)", () => {
+    expect(decode(renderGauge({ ...opts, style: "ring" }))).toContain("rotate(-90");
+  });
+  it("bar: contains a rect-based fill", () => {
+    expect(decode(renderGauge({ ...opts, style: "bar" }))).toContain("<rect");
+  });
+  it("hides countdown when showCountdown is false", () => {
+    const svg = decode(renderGauge({ ...opts, style: "horseshoe", showCountdown: false }));
+    expect(svg).not.toContain("2u14");
+  });
+  it("unknown style falls back to horseshoe (rotate 135)", () => {
+    // @ts-expect-error intentional bad value
+    expect(decode(renderGauge({ ...opts, style: "bogus" }))).toContain("rotate(135");
   });
 });
 
-describe("renderBadgeSvg", () => {
-  it("shows PEAK when peak", () => {
-    expect(decode(renderBadgeSvg(true, "1u00"))).toContain("PEAK");
+describe("renderBadge", () => {
+  it("shows PEAK and the countdown", () => {
+    const svg = decode(renderBadge({ isPeak: true, countdown: "1u00", showCountdown: true, background: "dark" }));
+    expect(svg).toContain("PEAK");
+    expect(svg).toContain("1u00");
   });
   it("shows OFF-PEAK when off-peak", () => {
-    expect(decode(renderBadgeSvg(false, "3u00"))).toContain("OFF-PEAK");
+    expect(decode(renderBadge({ isPeak: false, countdown: "3u00", showCountdown: true, background: "dark" }))).toContain("OFF-PEAK");
   });
 });
