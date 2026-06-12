@@ -1,5 +1,5 @@
 import { R, CIRC, HORSESHOE_ARC, BAR_TRACK, horseshoeDash, ringDash, barWidth, clampPct } from "./gauge.js";
-import { fillColour, palette, type ColourSettings } from "./theme.js";
+import { fillColour, resolvePalette, type ColourSettings, type Background } from "./theme.js";
 
 const SIZE = 144;
 const CX = SIZE / 2;
@@ -26,9 +26,14 @@ export interface GaugeOpts {
   pct: number;
   countdown: string;
   showCountdown: boolean;
-  background: "dark" | "light";
+  background: Background;
+  bgColor: string;
   colours: ColourSettings;
   style: GaugeStyle;
+}
+
+function bgRect(bg: string | null): string {
+  return bg ? `<rect x="0" y="0" width="${SIZE}" height="${SIZE}" fill="${bg}"/>` : "";
 }
 
 function centreText(
@@ -46,7 +51,7 @@ function centreText(
 }
 
 export function renderGauge(o: GaugeOpts): string {
-  const p = palette(o.background);
+  const p = resolvePalette(o.background, o.bgColor);
   const colour = fillColour(o.pct, o.colours);
   const pctText = `${Math.round(clampPct(o.pct))}%`;
   let track = "";
@@ -67,7 +72,7 @@ export function renderGauge(o: GaugeOpts): string {
 
   const yShift = o.style === "bar" ? -8 : 0;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
-  <rect x="0" y="0" width="${SIZE}" height="${SIZE}" fill="${p.bg}"/>
+  ${bgRect(p.bg)}
   ${track}
   ${fill}
   ${centreText(pctText, p, o.countdown, o.showCountdown, yShift)}
@@ -79,11 +84,12 @@ export interface BadgeOpts {
   isPeak: boolean;
   countdown: string;
   showCountdown: boolean;
-  background: "dark" | "light";
+  background: Background;
+  bgColor: string;
 }
 
 export function renderBadge(o: BadgeOpts): string {
-  const p = palette(o.background);
+  const p = resolvePalette(o.background, o.bgColor);
   const colour = o.isPeak ? "#f85149" : "#3fb950";
   const label = o.isPeak ? "PEAK" : "OFF-PEAK";
   const sub =
@@ -91,7 +97,7 @@ export function renderBadge(o: BadgeOpts): string {
       ? `<text x="${CX}" y="124" fill="${p.muted}" font-family="sans-serif" font-size="18" text-anchor="middle" dominant-baseline="middle">${o.countdown}</text>`
       : "";
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
-  <rect x="0" y="0" width="${SIZE}" height="${SIZE}" fill="${p.bg}"/>
+  ${bgRect(p.bg)}
   <circle cx="${CX}" cy="48" r="22" fill="${colour}"/>
   <text x="${CX}" y="96" fill="${p.text}" font-family="sans-serif" font-size="${o.isPeak ? 28 : 22}" font-weight="500" text-anchor="middle" dominant-baseline="middle">${label}</text>
   ${sub}

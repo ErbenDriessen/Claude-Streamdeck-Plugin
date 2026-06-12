@@ -3,7 +3,7 @@ import { renderGauge, renderBadge, formatCountdown } from "./render.js";
 
 const decode = (url: string) => Buffer.from(url.split(",")[1], "base64").toString("utf8");
 const colours = { colourMode: "heat" as const, accent: "#3fb950", warnAt: 70, dangerAt: 90 };
-const opts = { pct: 42, countdown: "2u14", showCountdown: true, background: "dark" as const, colours };
+const opts = { pct: 42, countdown: "2u14", showCountdown: true, background: "dark" as const, bgColor: "#0d1117", colours };
 
 describe("formatCountdown", () => {
   it("formats minutes, hours+minutes, days, and zero", () => {
@@ -42,15 +42,23 @@ describe("renderGauge", () => {
     expect(svg).toContain('width="144" height="144"');
     expect(svg).not.toContain("100%");
   });
+  it("transparent background draws no <rect>", () => {
+    const svg = decode(renderGauge({ ...opts, style: "horseshoe", background: "transparent" }));
+    expect(svg).not.toContain("<rect");
+  });
+  it("custom background uses the chosen colour as the rect fill", () => {
+    const svg = decode(renderGauge({ ...opts, style: "horseshoe", background: "custom", bgColor: "#123456" }));
+    expect(svg).toContain('fill="#123456"');
+  });
 });
 
 describe("renderBadge", () => {
   it("shows PEAK and the countdown", () => {
-    const svg = decode(renderBadge({ isPeak: true, countdown: "1u00", showCountdown: true, background: "dark" }));
+    const svg = decode(renderBadge({ isPeak: true, countdown: "1u00", showCountdown: true, background: "dark", bgColor: "#0d1117" }));
     expect(svg).toContain("PEAK");
     expect(svg).toContain("1u00");
   });
   it("shows OFF-PEAK when off-peak", () => {
-    expect(decode(renderBadge({ isPeak: false, countdown: "3u00", showCountdown: true, background: "dark" }))).toContain("OFF-PEAK");
+    expect(decode(renderBadge({ isPeak: false, countdown: "3u00", showCountdown: true, background: "dark", bgColor: "#0d1117" }))).toContain("OFF-PEAK");
   });
 });

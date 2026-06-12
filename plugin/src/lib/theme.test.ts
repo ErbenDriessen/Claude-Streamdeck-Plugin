@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fillColour, palette } from "./theme.js";
+import { fillColour, resolvePalette, relativeLuminance } from "./theme.js";
 
 const heat = { colourMode: "heat" as const, accent: "#3fb950", warnAt: 70, dangerAt: 90 };
 
@@ -17,15 +17,37 @@ describe("fillColour", () => {
   });
 });
 
-describe("palette", () => {
-  it("dark background uses dark canvas + light text", () => {
-    const p = palette("dark");
+describe("relativeLuminance", () => {
+  it("is high for white, low for black", () => {
+    expect(relativeLuminance("#ffffff")).toBeCloseTo(1, 2);
+    expect(relativeLuminance("#000000")).toBeCloseTo(0, 2);
+  });
+});
+
+describe("resolvePalette", () => {
+  it("dark uses dark canvas + light text", () => {
+    const p = resolvePalette("dark", "#000000");
     expect(p.bg).toBe("#0d1117");
     expect(p.text).toBe("#ffffff");
   });
-  it("light background uses light canvas + dark text", () => {
-    const p = palette("light");
+  it("light uses light canvas + dark text", () => {
+    const p = resolvePalette("light", "#000000");
     expect(p.bg).toBe("#f6f8fa");
+    expect(p.text).toBe("#1f2328");
+  });
+  it("transparent draws no background (bg null) with light text", () => {
+    const p = resolvePalette("transparent", "#000000");
+    expect(p.bg).toBeNull();
+    expect(p.text).toBe("#ffffff");
+  });
+  it("custom dark colour -> white text", () => {
+    const p = resolvePalette("custom", "#102030");
+    expect(p.bg).toBe("#102030");
+    expect(p.text).toBe("#ffffff");
+  });
+  it("custom light colour -> dark text", () => {
+    const p = resolvePalette("custom", "#eeddcc");
+    expect(p.bg).toBe("#eeddcc");
     expect(p.text).toBe("#1f2328");
   });
 });
