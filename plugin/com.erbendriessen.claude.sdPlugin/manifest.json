@@ -1,7 +1,8 @@
 {
-	"Name": "Claude",
-	"Version": "0.1.0.0",
+	"Name": "Claude Code Usage Monitor",
+	"Version": "1.0.0.0",
 	"Author": "ErbenDriessen",
+	"URL": "https://github.com/ErbenDriessen/Claude-Streamdeck-Plugin",
 	"Actions": [
 		{
 			"Name": "Session Limit",
@@ -9,7 +10,9 @@
 			"Icon": "imgs/actions/session/icon",
 			"Tooltip": "Claude 5-hour session limit used %, with reset countdown.",
 			"PropertyInspectorPath": "ui/session-limit.html",
-			"Controllers": ["Keypad"],
+			"Controllers": [
+				"Keypad"
+			],
 			"States": [
 				{
 					"Image": "imgs/actions/session/key",
@@ -23,7 +26,9 @@
 			"Icon": "imgs/actions/peak/icon",
 			"Tooltip": "Anthropic peak / off-peak window, with countdown to the next switch.",
 			"PropertyInspectorPath": "ui/peak-ticker.html",
-			"Controllers": ["Keypad"],
+			"Controllers": [
+				"Keypad"
+			],
 			"States": [
 				{
 					"Image": "imgs/actions/peak/key",
@@ -32,10 +37,10 @@
 			]
 		}
 	],
-	"Category": "Claude",
+	"Category": "Claude Code Usage Monitor",
 	"CategoryIcon": "imgs/plugin/category-icon",
 	"CodePath": "bin/plugin.js",
-	"Description": "Shows your Claude Code session limit and Anthropic peak hours.",
+	"Description": "Unofficial — not affiliated with Anthropic. Shows your Claude Code session limit (5-hour and 7-day) and Anthropic peak hours, live from your local login.",
 	"Icon": "imgs/plugin/marketplace",
 	"SDKVersion": 3,
 	"Software": {
@@ -52,8 +57,7 @@
 		}
 	],
 	"Nodejs": {
-		"Version": "24",
-		"Debug": "enabled"
+		"Version": "24"
 	},
 	"UUID": "com.erbendriessen.claude"
 }
