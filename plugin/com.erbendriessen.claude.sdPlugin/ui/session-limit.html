@@ -52,22 +52,5 @@
 				<sdpi-range setting="dangerAt" min="0" max="100" step="1" default="90" showlabels></sdpi-range>
 			</sdpi-item>
 		</details>
-
-		<sdpi-item label="Official tracking">
-			<sdpi-button id="setup">Set up official tracking</sdpi-button>
-		</sdpi-item>
-
-		<script>
-			document.getElementById("setup").addEventListener("click", () => {
-				SDPIComponents.streamDeckClient.send("sendToPlugin", { action: "installStatusLine" });
-			});
-			SDPIComponents.streamDeckClient.didReceiveFromPlugin?.((msg) => {
-				if (msg?.event === "installResult") {
-					const el = document.getElementById("setup");
-					el.textContent = msg.ok ? "Done — official tracking on" : "Failed (see tooltip)";
-					el.title = msg.message;
-				}
-			});
-		</script>
 	</body>
 </html>
