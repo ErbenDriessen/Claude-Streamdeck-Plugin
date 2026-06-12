@@ -37,6 +37,11 @@ describe("renderGauge", () => {
     // @ts-expect-error intentional bad value
     expect(decode(renderGauge({ ...opts, style: "bogus" }))).toContain("rotate(135");
   });
+  it("background rect fills the full 144 canvas in absolute units (Stream Deck mis-scales 100%)", () => {
+    const svg = decode(renderGauge({ ...opts, style: "horseshoe" }));
+    expect(svg).toContain('width="144" height="144"');
+    expect(svg).not.toContain("100%");
+  });
 });
 
 describe("renderBadge", () => {

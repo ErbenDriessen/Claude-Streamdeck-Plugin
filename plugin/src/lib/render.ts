@@ -67,7 +67,7 @@ export function renderGauge(o: GaugeOpts): string {
 
   const yShift = o.style === "bar" ? -8 : 0;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
-  <rect width="100%" height="100%" fill="${p.bg}"/>
+  <rect x="0" y="0" width="${SIZE}" height="${SIZE}" fill="${p.bg}"/>
   ${track}
   ${fill}
   ${centreText(pctText, p, o.countdown, o.showCountdown, yShift)}
@@ -91,7 +91,7 @@ export function renderBadge(o: BadgeOpts): string {
       ? `<text x="${CX}" y="124" fill="${p.muted}" font-family="sans-serif" font-size="18" text-anchor="middle" dominant-baseline="middle">${o.countdown}</text>`
       : "";
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
-  <rect width="100%" height="100%" fill="${p.bg}"/>
+  <rect x="0" y="0" width="${SIZE}" height="${SIZE}" fill="${p.bg}"/>
   <circle cx="${CX}" cy="48" r="22" fill="${colour}"/>
   <text x="${CX}" y="96" fill="${p.text}" font-family="sans-serif" font-size="${o.isPeak ? 28 : 22}" font-weight="500" text-anchor="middle" dominant-baseline="middle">${label}</text>
   ${sub}
