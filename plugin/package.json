@@ -23,6 +23,6 @@
     "vitest": "^2.0.0"
   },
   "dependencies": {
-    "@elgato/streamdeck": "^1.0.0"
+    "@elgato/streamdeck": "^2.0.0"
   }
 }
