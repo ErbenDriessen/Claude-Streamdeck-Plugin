@@ -27,13 +27,13 @@
 		</sdpi-item>
 
 		<sdpi-item label="Colour">
-			<sdpi-select setting="colourMode" default="heat">
+			<sdpi-select id="colourSelect" setting="colourMode" default="heat">
 				<option value="heat">Auto (green to red)</option>
 				<option value="solid">Single colour</option>
 			</sdpi-select>
 		</sdpi-item>
 
-		<sdpi-item label="Accent">
+		<sdpi-item id="accentItem" label="Accent" style="display: none">
 			<sdpi-color setting="accent" default="#3fb950"></sdpi-color>
 		</sdpi-item>
 
@@ -63,11 +63,15 @@
 		<script>
 			const bgSelect = document.getElementById("bgSelect");
 			const customItem = document.getElementById("customColourItem");
-			const syncCustom = () => {
+			const colourSelect = document.getElementById("colourSelect");
+			const accentItem = document.getElementById("accentItem");
+			const sync = () => {
 				customItem.style.display = bgSelect && bgSelect.value === "custom" ? "" : "none";
+				accentItem.style.display = colourSelect && colourSelect.value === "solid" ? "" : "none";
 			};
-			bgSelect.addEventListener("change", syncCustom);
-			setInterval(syncCustom, 250);
+			bgSelect.addEventListener("change", sync);
+			colourSelect.addEventListener("change", sync);
+			setInterval(sync, 250);
 		</script>
 	</body>
 </html>
